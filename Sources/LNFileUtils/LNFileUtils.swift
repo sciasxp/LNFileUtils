@@ -15,9 +15,11 @@ public enum StorageTypes {
     case userDefaults
 }
 
-public struct FileUtils {
+public class FileUtils {
     
     public static let shared = FileUtils()
+    
+    private var memoryCache: [String: Data] = [:]
     
     private init() {}
     
@@ -28,14 +30,24 @@ public struct FileUtils {
         case .fileSystem(let place):
             try storeDataOnFileSystem(key: key, data: data, place: place)
         }
+        memoryCache[key] = data
     }
     
     public func retrive(key: String, from type: StorageTypes) throws -> Data? {
+        if let data = memoryCache[key] {
+            return data
+        }
+        
         switch type {
         case .userDefaults:
-            return retriveDataOnUserDefaults(key: key)
+            guard let data = retriveDataOnUserDefaults(key: key) else { return nil }
+            memoryCache[key] = data
+            return data
+            
         case .fileSystem(let place):
-            return try retriveDataOnFileSystem(key: key, place: place)
+            let data = try retriveDataOnFileSystem(key: key, place: place)
+            memoryCache[key] = data
+            return data
         }
     }
     
