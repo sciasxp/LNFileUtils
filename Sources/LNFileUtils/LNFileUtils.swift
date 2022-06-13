@@ -17,7 +17,7 @@ public enum StorageTypes {
 
 public struct FileUtils {
     
-    static let shared = FileUtils()
+    public static let shared = FileUtils()
     
     private init() {}
     
