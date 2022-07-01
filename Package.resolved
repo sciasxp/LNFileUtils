@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "swiftqoi",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sciasxp/SwiftQOI",
+      "state" : {
+        "revision" : "05f329266c8a92fcc6806e20db2dfd9ec01aa8c2",
+        "version" : "0.1.1"
+      }
+    }
+  ],
+  "version" : 2
+}

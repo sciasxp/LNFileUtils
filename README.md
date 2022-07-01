@@ -10,19 +10,21 @@ This framework will be usable by iOS 13 and above or MacOS 10.15 and above.
 
 ### SPM
 
-****LNFileUtils is available via SwiftPackage.****
+**LNFileUtils is available via SwiftPackage.**
 
 Add the following to you Package.swift file's dependencies:
 
 ```swift
-.package(url: "https://github.com/sciasxp/LNSFileUtils.git", from: "0.1.0"),
+.package(url: "https://github.com/sciasxp/LNSFileUtils.git", from: "0.2.0"),
 ```
 
 ## Features
 
-- Save/Retrieve/Remove Data to UserDefaults with Key identifier
+- Save/Retrieve/Remove Data to UserDefaults with Key identifier.
   
-- Save/Retrieve/Remove Data to FileSystem with Key identifier
+- Save/Retrieve/Remove Data to FileSystem with Key identifier.
+  
+- UIImage extension to easily cache your images in different formats and compression quality.
   
 
 ## How to Use
@@ -35,32 +37,51 @@ import LNFileUtils
 
 ```swift
 let utils = FileUtils.shared
+
 do {
+
     try utils.store (
+
         key: "defaultStorageTest", 
+
         data: <#Your Data Here#>, 
+
         on: .userDefaults
+
     )
+
 } catch {}
 ```
 
 ```swift
 let utils = FileUtils.shared
+
 do {
+
     let data: Data? = try utils.retrieve (
+
         key: "defaultStorageTest", 
+
         on: .userDefaults
+
     )
+
 } catch {}
 ```
 
 ```swift
 let utils = FileUtils.shared
+
 do {
+
     try utils.remove (
+
         key: "defaultStorageTest",
+
         on: .userDefaults
+
     )
+
 } catch {}
 ```
 
@@ -68,32 +89,51 @@ do {
 
 ```swift
 let utils = FileUtils.shared
+
 do {
+
     let url = try utils.store (
+
         key: "fileSystemCacheStorageTest", 
+
         data: <#Your Data Here#>, 
+
         on: .fileSystem(place: .cache)
+
     )
+
 } catch {}
 ```
 
 ```swift
 let utils = FileUtils.shared
+
 do {
+
     let data: Data? = try utils.retrieve (
+
         key: "fileSystemCacheStorageTest",
+
         on: .fileSystem(place: .cache)
+
     )
+
 } catch {}
 ```
 
 ```swift
 let utils = FileUtils.shared
+
 do {
+
     try utils.remove (
+
         key: "fileSystemCacheStorageTest",
+
         on: .fileSystem(place: .cache)
+
     )
+
 } catch {}
 ```
 
@@ -106,7 +146,43 @@ do {
 3. library
   
 
-## ## Future Work
+### UIImage+Extension Store
+
+```swift
+let image = UIImage(systemName: "clock")!
+do {
+    try referenceImage.storeCache (
+        with: "fileSystemCacheUIImageExtension",
+        on: .fileSystem(place: .cache),
+        as: .png
+    )
+} catch {}
+```
+
+Where **on** is same as **place** on **FileUtils** and as can be any of these formats:
+
+- .jpg(quality: 1.0)
+  
+- .png
+  
+- .heic
+  
+- .qoi (more about QOI format here: https://github.com/sciasxp/SwiftQOI)
+  
+
+### UIImage+Extension Retrieve
+
+```swift
+do {
+    let image = try UIImage.image (
+        with: "fileSystemCacheUIImageExtension",
+        on: .fileSystem(place: .cache),
+        as: .png
+    )
+} catch {}
+```
+
+## Future Work
 
 1. Improve unit tests.
   

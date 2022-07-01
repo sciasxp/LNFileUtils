@@ -145,6 +145,34 @@ final class LNFileUtilsTests: XCTestCase {
         }
     }
     
+    func test_ImageExtensionStoreCache() throws {
+        let data = getData(name: "reference", ext: "png")!
+        let image = UIImage(data: data)!
+    
+        let url = try image.storeCache(with: "fileSystemCacheUIImageExtension", on: .fileSystem(place: .cache))!
+        
+        let exists = FileManager.default.fileExists(atPath: url.path)
+        XCTAssertTrue(exists)
+    }
+    
+    func test_ImageExtensionRetrieveCache() throws {
+        let data = getData(name: "reference", ext: "png")!
+        let referenceImage = UIImage(data: data)!
+        
+        try referenceImage.storeCache (
+            with: "fileSystemCacheUIImageExtension",
+            on: .fileSystem(place: .cache),
+            as: .png
+        )
+        
+        let sut = try UIImage.image(
+            from: "fileSystemCacheUIImageExtension",
+            on: .fileSystem(place: .cache)
+        )!
+        
+        XCTAssertEqual(sut.pngData(), referenceImage.pngData())
+    }
+    
     func test_ReadPerfomance() throws {
         let utils = FileUtils.shared
         let data = getData(name: "reference", ext: "png")!
