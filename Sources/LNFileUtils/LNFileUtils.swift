@@ -19,35 +19,53 @@ public class FileUtils {
     
     public static let shared = FileUtils()
     
-    private var memoryCache: [String: Data] = [:]
-    
     private init() {}
     
-    public func store(key: String, data: Data, `on` type: StorageTypes) throws {
+    private let ONE_MEGA = 1_024 * 1_024
+    
+    private var memoryCache: [String: Data] = [:]
+    
+    @discardableResult
+    public func store(key: String, data: Data, `on` type: StorageTypes) throws -> URL? {
+        var url: URL?
+        
         switch type {
         case .userDefaults:
             storeDataOnUserDefaults(key: key, data: data)
         case .fileSystem(let place):
-            try storeDataOnFileSystem(key: key, data: data, place: place)
+            url = try storeDataOnFileSystem(key: key, data: data, place: place)
         }
-        memoryCache[key] = data
+        
+        return url
     }
     
-    public func retrive(key: String, from type: StorageTypes) throws -> Data? {
+    public func retrieve(key: String, from type: StorageTypes) throws -> Data? {
+        var data: Data?
+        
         if let data = memoryCache[key] {
             return data
         }
         
         switch type {
         case .userDefaults:
-            guard let data = retriveDataOnUserDefaults(key: key) else { return nil }
-            memoryCache[key] = data
-            return data
-            
+            data = retriveDataOnUserDefaults(key: key)
         case .fileSystem(let place):
-            let data = try retriveDataOnFileSystem(key: key, place: place)
+            data = try retriveDataOnFileSystem(key: key, place: place)
+        }
+        
+        if let data = data, data.count < ONE_MEGA {
             memoryCache[key] = data
-            return data
+        }
+        
+        return data
+    }
+    
+    public func remove(key: String, from type: StorageTypes) throws {
+        switch type {
+        case .userDefaults:
+            removeDataOnUserDefaults(key: key)
+        case .fileSystem(let place):
+            try removeDataOnFileSystem(key: key, place: place)
         }
     }
     
@@ -59,9 +77,14 @@ public class FileUtils {
         UserDefaults.standard.data(forKey: key)
     }
     
-    private func storeDataOnFileSystem(key: String, data: Data, place: FileSystemPlaces) throws {
+    private func removeDataOnUserDefaults(key: String) {
+        UserDefaults.standard.removeObject(forKey: key)
+    }
+    
+    private func storeDataOnFileSystem(key: String, data: Data, place: FileSystemPlaces) throws -> URL? {
         let url = try url(for: key, place: place)
         try data.write(to: url)
+        return url
     }
     
     private func url(for key: String, place: FileSystemPlaces) throws -> URL {
@@ -73,11 +96,10 @@ public class FileUtils {
         case .library: directory = .libraryDirectory
         }
         
-        guard let directoryURL = FileManager.default.urls(
+        guard let directoryURL = FileManager.default.urls (
             for: directory,
             in: FileManager.SearchPathDomainMask.userDomainMask
         ).first else {
-            
             throw FileSystemErrors.retrivingDirectoryPath
         }
         
@@ -88,5 +110,10 @@ public class FileUtils {
     private func retriveDataOnFileSystem(key: String, place: FileSystemPlaces) throws -> Data {
         let url = try url(for: key, place: place)
         return try Data(contentsOf: url)
+    }
+    
+    private func removeDataOnFileSystem(key: String, place: FileSystemPlaces) throws {
+        let url = try url(for: key, place: place)
+        try FileManager.default.removeItem(at: url)
     }
 }

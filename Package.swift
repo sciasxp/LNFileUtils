@@ -26,7 +26,8 @@ let package = Package(
             dependencies: []),
         .testTarget(
             name: "LNFileUtilsTests",
-            dependencies: ["LNFileUtils"]),
+            dependencies: ["LNFileUtils"],
+            resources: [.process("Assets")]),
     ],
     swiftLanguageVersions: [.v5]
 )
