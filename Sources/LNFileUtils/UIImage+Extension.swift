@@ -59,14 +59,12 @@ public extension UIImage {
         return try FileUtils.shared.store(key: key, data: dataRepresentation, on: storageType)
     }
     
-    static func image(from key: String, on storageType: StorageTypes, isQOI: Bool = false) throws -> UIImage? {
+    static func image(from key: String, on storageType: StorageTypes) throws -> UIImage? {
         guard let dataRepresentation = try FileUtils.shared.retrieve(key: key, from: storageType) else { return nil }
         
-        if isQOI {
-            return UIImage(qoi: dataRepresentation)
-        }
-        
-        return UIImage(data: dataRepresentation)
+        return SwiftQOI().isQOI(data: dataRepresentation) ?
+        UIImage(qoi: dataRepresentation) :
+        UIImage(data: dataRepresentation)
     }
     
     static func removeCache(with key: String, on storageType: StorageTypes) throws {

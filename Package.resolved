@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sciasxp/SwiftQOI",
       "state" : {
-        "revision" : "05f329266c8a92fcc6806e20db2dfd9ec01aa8c2",
-        "version" : "0.1.1"
+        "revision" : "61752d6abb0affd1212c2486e5fc877dc7c3d292",
+        "version" : "0.2.1"
       }
     }
   ],
