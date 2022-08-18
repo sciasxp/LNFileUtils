@@ -24,7 +24,7 @@ public class FileUtils {
     
     private let ONE_MEGA = 1_024 * 1_024
     
-    private var memoryCache: [String: Data] = [:]
+//    private var memoryCache: [String: Data] = [:]
     
     @discardableResult
     public func store(key: String, data: Data, `on` type: StorageTypes) async throws -> URL? {
@@ -43,9 +43,9 @@ public class FileUtils {
     public func retrieve(key: String, from type: StorageTypes) async throws -> Data? {
         var data: Data?
         
-        if let data = memoryCache[key] {
-            return data
-        }
+//        if let data = memoryCache[key] {
+//            return data
+//        }
         
         switch type {
         case .userDefaults:
@@ -54,9 +54,9 @@ public class FileUtils {
             data = try await retriveDataOnFileSystem(key: key, place: place)
         }
         
-        if let data = data, data.count < ONE_MEGA {
-            memoryCache[key] = data
-        }
+//        if let data = data, data.count < ONE_MEGA {
+//            memoryCache[key] = data
+//        }
         
         return data
     }
