@@ -33,38 +33,40 @@ public extension UIImage {
     private var cgImageOrientation: CGImagePropertyOrientation { .init(imageOrientation) }
     
     func heic(compressionQuality: CGFloat = 1) -> Data? {
-        guard
-            let mutableData = CFDataCreateMutable(nil, 0),
-            let destination = CGImageDestinationCreateWithData(mutableData, "public.heic" as CFString, 1, nil),
-            let cgImage = cgImage
+        guard let mutableData = CFDataCreateMutable(nil, 0),
+              let destination = CGImageDestinationCreateWithData(mutableData, "public.heic" as CFString, 1, nil),
+              let cgImage = cgImage
         else { return nil }
         
-        CGImageDestinationAddImage(destination,
-                                   cgImage, [
-                                    kCGImageDestinationLossyCompressionQuality: compressionQuality,
-                                    kCGImagePropertyOrientation: cgImageOrientation.rawValue
-                                   ] as CFDictionary)
+        let options = [
+            kCGImageDestinationLossyCompressionQuality: compressionQuality,
+            kCGImagePropertyOrientation: cgImageOrientation.rawValue
+        ] as CFDictionary
+        
+        CGImageDestinationAddImage(destination, cgImage, options)
         
         guard CGImageDestinationFinalize(destination) else { return nil }
         return mutableData as Data
     }
     
     @discardableResult
-    func storeCache(with key: String,
-                    on storageType: StorageTypes,
-                    `as` imageRepresentation: ImageRepresentation = .qoi) throws -> URL? {
+    func storeCache (
+        with key: String,
+        on storageType: StorageTypes,
+        `as` imageRepresentation: ImageRepresentation = .png
+    ) async throws -> URL? {
         
         let dataRepresentation = try self.dataRepresentation(for: imageRepresentation)
         
-        return try FileUtils.shared.store(key: key, data: dataRepresentation, on: storageType)
+        return try await FileUtils.shared.store(key: key, data: dataRepresentation, on: storageType)
     }
     
-    static func image(from key: String, on storageType: StorageTypes) throws -> UIImage? {
-        guard let dataRepresentation = try FileUtils.shared.retrieve(key: key, from: storageType) else { return nil }
+    static func image(from key: String, on storageType: StorageTypes) async throws -> UIImage? {
+        guard let dataRepresentation = try await FileUtils.shared.retrieve(key: key, from: storageType) else { return nil }
         
         return SwiftQOI().isQOI(data: dataRepresentation) ?
-        UIImage(qoi: dataRepresentation) :
-        UIImage(data: dataRepresentation)
+            UIImage(qoi: dataRepresentation) :
+            UIImage(data: dataRepresentation)
     }
     
     static func removeCache(with key: String, on storageType: StorageTypes) throws {

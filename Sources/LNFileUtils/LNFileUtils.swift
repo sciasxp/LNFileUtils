@@ -2,6 +2,7 @@ import Foundation
 
 public enum FileSystemErrors: Error {
     case retrivingDirectoryPath
+    case invalidURL
 }
 
 public enum FileSystemPlaces {
@@ -26,20 +27,20 @@ public class FileUtils {
     private var memoryCache: [String: Data] = [:]
     
     @discardableResult
-    public func store(key: String, data: Data, `on` type: StorageTypes) throws -> URL? {
+    public func store(key: String, data: Data, `on` type: StorageTypes) async throws -> URL? {
         var url: URL?
         
         switch type {
         case .userDefaults:
             storeDataOnUserDefaults(key: key, data: data)
         case .fileSystem(let place):
-            url = try storeDataOnFileSystem(key: key, data: data, place: place)
+            url = try await storeDataOnFileSystem(key: key, data: data, place: place)
         }
         
         return url
     }
     
-    public func retrieve(key: String, from type: StorageTypes) throws -> Data? {
+    public func retrieve(key: String, from type: StorageTypes) async throws -> Data? {
         var data: Data?
         
         if let data = memoryCache[key] {
@@ -50,7 +51,7 @@ public class FileUtils {
         case .userDefaults:
             data = retriveDataOnUserDefaults(key: key)
         case .fileSystem(let place):
-            data = try retriveDataOnFileSystem(key: key, place: place)
+            data = try await retriveDataOnFileSystem(key: key, place: place)
         }
         
         if let data = data, data.count < ONE_MEGA {
@@ -81,10 +82,20 @@ public class FileUtils {
         UserDefaults.standard.removeObject(forKey: key)
     }
     
-    private func storeDataOnFileSystem(key: String, data: Data, place: FileSystemPlaces) throws -> URL? {
-        let url = try url(for: key, place: place)
-        try data.write(to: url)
-        return url
+    private func storeDataOnFileSystem(key: String, data: Data, place: FileSystemPlaces) async throws -> URL? {
+        return try await withCheckedThrowingContinuation { [weak self] continuation in
+            do {
+                guard let url = try self?.url(for: key, place: place) else {
+                    continuation.resume(with: .failure(FileSystemErrors.invalidURL))
+                    return
+                }
+                try data.write(to: url)
+                continuation.resume(with: .success(url))
+                
+            } catch {
+                continuation.resume(with: .failure(error))
+            }
+        }
     }
     
     private func url(for key: String, place: FileSystemPlaces) throws -> URL {
@@ -107,9 +118,21 @@ public class FileUtils {
         return url
     }
     
-    private func retriveDataOnFileSystem(key: String, place: FileSystemPlaces) throws -> Data {
-        let url = try url(for: key, place: place)
-        return try Data(contentsOf: url)
+    private func retriveDataOnFileSystem(key: String, place: FileSystemPlaces) async throws -> Data {
+        return try await withCheckedThrowingContinuation { [weak self] continuation in
+            do {
+                guard let url = try self?.url(for: key, place: place) else {
+                    continuation.resume(with: .failure(FileSystemErrors.invalidURL))
+                    return
+                }
+                
+                let data = try Data(contentsOf: url)
+                continuation.resume(with: .success(data))
+                
+            } catch {
+                continuation.resume(with: .failure(error))
+            }
+        }
     }
     
     private func removeDataOnFileSystem(key: String, place: FileSystemPlaces) throws {
