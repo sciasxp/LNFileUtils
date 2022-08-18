@@ -53,16 +53,22 @@ public extension UIImage {
     func storeCache (
         with key: String,
         on storageType: StorageTypes,
-        `as` imageRepresentation: ImageRepresentation = .png
+        `as` imageRepresentation: ImageRepresentation = .png,
+        fileUtils: FileUtils = FileUtils.shared
     ) async throws -> URL? {
         
         let dataRepresentation = try self.dataRepresentation(for: imageRepresentation)
         
-        return try await FileUtils.shared.store(key: key, data: dataRepresentation, on: storageType)
+        return try await fileUtils.store(key: key, data: dataRepresentation, on: storageType)
     }
     
-    static func image(from key: String, on storageType: StorageTypes) async throws -> UIImage? {
-        guard let dataRepresentation = try await FileUtils.shared.retrieve(key: key, from: storageType) else { return nil }
+    static func image(
+        from key: String,
+        on storageType: StorageTypes,
+        fileUtils: FileUtils = FileUtils.shared
+    ) async throws -> UIImage? {
+        
+        guard let dataRepresentation = try await fileUtils.retrieve(key: key, from: storageType) else { return nil }
         
         return SwiftQOI().isQOI(data: dataRepresentation) ?
             UIImage(qoi: dataRepresentation) :
